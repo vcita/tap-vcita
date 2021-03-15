@@ -8,7 +8,7 @@ from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
 
-PAGE_SIZE = 1
+PAGE_SIZE = 100
 REQUIRED_CONFIG_KEYS = ["start_date", "api_key"]
 LOGGER = singer.get_logger()
 
