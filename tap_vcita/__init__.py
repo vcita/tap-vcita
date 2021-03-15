@@ -9,7 +9,7 @@ from singer.schema import Schema
 
 
 PAGE_SIZE = 1
-REQUIRED_CONFIG_KEYS = ["start_date", "username", "password"]
+REQUIRED_CONFIG_KEYS = ["start_date", "api_key"]
 LOGGER = singer.get_logger()
 
 def get_abs_path(path):
@@ -54,9 +54,9 @@ def discover():
     return Catalog(streams)
 
 
-def send_request(stream_name, state):
+def send_request(api_key, stream_name, state):
     url = 'http://localhost:7100/platform/v1/taps'
-    headers = {'Authorization' : 'Admin kjh7tdewtfvdewolmmd' }
+    headers = {'Authorization' : 'Bearer ' + api_key }
     params = {'model' : stream_name, 'state' : state[stream_name], 'page_size' : PAGE_SIZE}
     r = requests.get(url, headers=headers, params=params) 
     data = r.json() 
@@ -78,7 +78,7 @@ def sync(config, state, catalog):
             key_properties=stream.key_properties,
         )
 
-        tap_data = send_request(stream.tap_stream_id, state)
+        tap_data = send_request(config['api_key'], stream.tap_stream_id, state)
 
         max_bookmark = None
         for row in tap_data:
