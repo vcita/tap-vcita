@@ -57,7 +57,9 @@ def discover():
 def send_request(api_key, stream_name, state):
     url = 'http://localhost:7100/platform/v1/taps'
     headers = {'Authorization' : 'Bearer ' + api_key }
-    params = {'model' : stream_name, 'state' : state[stream_name], 'page_size' : PAGE_SIZE}
+    params = {'model' : stream_name, 'page_size' : PAGE_SIZE}
+    stream_state = state.get(stream_name)
+    if stream_state: params['state'] = stream_state
     r = requests.get(url, headers=headers, params=params) 
     data = r.json() 
     return data['data']
