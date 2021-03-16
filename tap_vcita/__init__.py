@@ -7,9 +7,11 @@ from singer import utils, metadata
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
-
+BASE_URL = 'http://localhost:7100'
+REPLICATION_KEY = "updated_at"
 PAGE_SIZE = 100
 REQUIRED_CONFIG_KEYS = ["start_date", "api_key"]
+
 LOGGER = singer.get_logger()
 
 def get_abs_path(path):
@@ -34,7 +36,7 @@ def discover():
         # TODO: populate any metadata and stream's key properties here..
         stream_metadata = []
         key_properties = ["id"]
-        replication_key = "updated_at"
+        replication_key = REPLICATION_KEY
         streams.append(
             CatalogEntry(
                 tap_stream_id=stream_id,
@@ -55,7 +57,7 @@ def discover():
 
 
 def send_request(api_key, stream_name, state):
-    url = 'http://localhost:7100/platform/v1/taps'
+    url = BASE_URL + '/platform/v1/taps'
     headers = {'Authorization' : 'Bearer ' + api_key }
     params = {'model' : stream_name, 'page_size' : PAGE_SIZE}
     stream_state = state.get(stream_name)
