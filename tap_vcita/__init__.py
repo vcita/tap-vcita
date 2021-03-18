@@ -62,8 +62,8 @@ def send_request(api_key, stream_name, state):
     params = {'model' : stream_name, 'page_size' : PAGE_SIZE}
     stream_state = state.get(stream_name)
     if stream_state: params['state'] = stream_state
-    r = requests.get(url, headers=headers, params=params) 
-    data = r.json() 
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
     return data['data']
 
 def sync(config, state, catalog):
