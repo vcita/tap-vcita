@@ -7,7 +7,7 @@ from singer import utils, metadata
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 
-BASE_URL = 'http://localhost:7100'
+BASE_URL = 'https://api2.vcita.com'
 REPLICATION_KEY = "updated_at"
 PAGE_SIZE = 100
 REQUIRED_CONFIG_KEYS = ["start_date", "api_key"]
@@ -61,7 +61,8 @@ def send_request(api_key, stream_name, state):
     headers = {'Authorization' : 'Bearer ' + api_key }
     params = {'model' : stream_name, 'page_size' : PAGE_SIZE}
     stream_state = state.get(stream_name)
-    if stream_state: params['state'] = stream_state
+    if stream_state:
+        params['state'] = stream_state
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
     return data['data']
@@ -70,7 +71,7 @@ def sync(config, state, catalog):
     """ Sync data from tap source """
     # Loop over selected streams in catalog
     for stream in catalog.get_selected_streams(state):
-        LOGGER.info("Syncing stream:" + stream.tap_stream_id)
+        LOGGER.info("Syncing stream: %s", stream.tap_stream_id)
         LOGGER.info("Starting with state %s", state)
 
         bookmark_column = stream.replication_key
@@ -99,7 +100,6 @@ def sync(config, state, catalog):
                     max_bookmark = max(max_bookmark, row[bookmark_column])
         if bookmark_column and not is_sorted:
             singer.write_state({stream.tap_stream_id: max_bookmark})
-    return
 
 
 @utils.handle_top_exception(LOGGER)
