@@ -6,6 +6,7 @@ import requests
 from singer import utils, metadata
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
+from singer import Transformer, metadata
 
 BASE_URL = 'https://api2.vcita.com'
 REPLICATION_KEY = "updated_at"
@@ -86,18 +87,24 @@ def sync(config, state, catalog):
         tap_data = send_request(config['api_key'], stream.tap_stream_id, state)
 
         max_bookmark = None
-        for row in tap_data:
-            # TODO: place type conversions or transformations here
-
-            # write one or more rows to the stream:
-            singer.write_records(stream.tap_stream_id, [row])
-            if bookmark_column:
-                if is_sorted:
-                    # update bookmark to latest value
-                    singer.write_state({stream.tap_stream_id: row[bookmark_column]})
-                else:
-                    # if data unsorted, save max value until end of writes
-                    max_bookmark = max(max_bookmark, row[bookmark_column])
+        with Transformer() as transformer:
+            for record in tap_data:
+                # write one or more rows to the stream:
+                singer.write_record(
+                    stream.tap_stream_id, 
+                    transformer.transform(
+                        record, 
+                        stream.schema.to_dict(),
+                        metadata.to_map(stream.metadata)
+                    )
+                )
+                if bookmark_column:
+                    if is_sorted:
+                        # update bookmark to latest value
+                        singer.write_state({stream.tap_stream_id: record[bookmark_column]})
+                    else:
+                        # if data unsorted, save max value until end of writes
+                        max_bookmark = max(max_bookmark, record[bookmark_column])
         if bookmark_column and not is_sorted:
             singer.write_state({stream.tap_stream_id: max_bookmark})
 
